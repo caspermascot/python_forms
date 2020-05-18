@@ -36,6 +36,7 @@ class DeclaredFieldsMetaClass(type):
             if hasattr(base, 'declared_fields'):
                 declared_fields.update(base.declared_fields)
 
+
             # Field shadowing.
             for attr, value in base.__dict__.items():
                 if value is None and attr in declared_fields:
@@ -157,20 +158,6 @@ class BaseForm:
             response.append(val.as_json())
         return response
 
-    # def __new__(cls, *args, **kwargs):
-    #     return cls.__as_html(cls)
-
-    # def __call__(self, *args, **kwargs):
-    #     return "call"
-    # def __call__(self, *args, **kwargs):
-    #     if hasattr(self, 'mymethod') and callable(getattr(self, 'mymethod')):
-    #         return self.mymethod()
-    #
-    # def __getattr__(self, item):
-    #     return "called"
-        # if hasattr(self, 'mymethod') and callable(getattr(self, 'mymethod')):
-        #     return self.mymethod()
-
 
 class Form(BaseForm, metaclass=DeclaredFieldsMetaClass):
-    """a collection"""
+    """form to be extended by all forms"""

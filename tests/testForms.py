@@ -1,6 +1,6 @@
 from casper import forms
 import time
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 class LoginForm(forms.Form):
     username = forms.CharField(default='tr', max_length=10, custom_error='not valid', required=False)
@@ -27,10 +27,6 @@ class RegisterForm(forms.Form):
     date_time = forms.DateTimeField()
 
 
-# import time
-# start_time = time.time()
-# from datetime import datetime
-# start_time = datetime.now()
 
 start_time = time.monotonic()
 data = initial ={'username':'ada','email':'email'}
@@ -39,8 +35,7 @@ print(login.is_valid())
 print(login.clean_data())
 print(login.errors())
 print(login.as_json())
-# print("--- %s seconds ---" % (time.time() - start_time))
-# end_time = datetime.now()
-# print('Duration: {}'.format(end_time - start_time))
+
+
 end_time = time.monotonic()
 print(timedelta(seconds=end_time - start_time))
