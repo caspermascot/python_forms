@@ -408,11 +408,11 @@ class FormValidator(Validator):
 
     @staticmethod
     def UrlField(data):
+
         try:
             data = str(data)
-            if not re.match(
-                    r'((http://|https://|ftp\://)|(www.))+(([a-zA-Z0-9\.-]+\.[a-zA-Z]{2,4})|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))(/[a-zA-Z0-9%:/-_\?\.\'~]*)?',
-                    data):
+            from urllib.parse import urlparse
+            if not data == urlparse(url=data).geturl():
                 raise Exception
         except Exception:
             raise ValidationFailedException('Invalid url')

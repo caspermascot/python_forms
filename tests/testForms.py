@@ -15,6 +15,7 @@ class LoginForm(forms.Form):
     time_field = forms.TimeField(default='12:00:03', required=False)
     password = forms.PasswordField(must_contain_lower_case=True, must_contain_number=True, must_contain_symbol=False,default='Passwprd1',required=False, min_length=5)
     phone = forms.PhoneField(default='0456432234', internationalize=False, required=False)
+    url = forms.UrlField(default='www.google.com', required=False)
 
 
     class Meta:
