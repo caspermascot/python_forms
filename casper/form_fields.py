@@ -1,35 +1,60 @@
 from casper.Fields import Fields, BaseButtonField
+from casper.exceptions.exceptions import ValidationFailedException
 
 
 class BooleanField(Fields):
-    def _get_html_fields(self):
-        pass
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+    def _get_html_fields(self):
+        html = """<span> <input class='{}' type='text' {} /></span>""".format(self.style, super()._get_field_form_defaults())
+        res = super()._get_html_fields()
+        res['html'] = html
+        return res
 
 class ButtonField(BaseButtonField):
     def _get_html_fields(self):
-        pass
+        return super()._get_html_fields()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.field_type = 'button'
 
-
 class __Choices(Fields):
     def _get_html_fields(self):
-        pass
+        return super()._get_html_fields()
 
     choices = None
     def __init__(self, choices: list = None, **kwargs):
         super().__init__(**kwargs)
-        self.choices = choices
+        self.set_choice(choices=choices)
 
-        if not self.choices:
+
+    def set_choice(self, choices:list = None):
+        if choices is None or not choices:
             from casper.exceptions.exceptions import FieldCreateFailedException
             raise FieldCreateFailedException('Required parameter choice is missing')
+
+        all_choice = []
+        for val in choices:
+            if isinstance(val, dict):
+                all_choice.append(val)
+            else:
+                all_choice.append({val:val})
+
+        self.choices = all_choice
+
+    def _get_field_data(self):
+        try:
+            data = super()._get_field_data()
+            if data:
+                if isinstance(data,list):
+                    return data
+                else:
+                    return data.split(',')
+        except Exception:
+            raise ValidationFailedException('Invalid data supplied for choice')
+
 
     def as_json(self) -> {}:
         return {**super().as_json(),**{
@@ -38,9 +63,6 @@ class __Choices(Fields):
 
 
 class ChoiceField(__Choices):
-    def _get_html_fields(self):
-        pass
-
     multiple = False
     def __init__(self, multiple: bool = False, **kwargs):
         super().__init__(**kwargs)
@@ -51,13 +73,61 @@ class ChoiceField(__Choices):
             'multiple': self.multiple,
         }}
 
+    def _get_html_fields(self):
+        field_data = super()._get_field_data()
+        html = """<span> <select class='{}' type='number' {} """.format(self.style, super()._get_field_form_defaults())
+        if self.multiple:
+            html += "multiple='true' "
+        html += '/>'
+
+        if self.choices:
+            for row in self.choices:
+                temp = """<option value='{}' """.format(list(row.values())[0])
+                if field_data is not None and list(row.values())[0] in field_data:
+                    temp += "selected='true' "
+                html += """{}>{}</option>""".format(temp, str(list(row.keys())[0]).title())
+
+        html += '</select></span>'
+
+        res = super()._get_base_html_fields()
+        res['html'] = html
+        return res
+
+
+
 
 class CheckBoxField(ChoiceField):
-    def _get_html_fields(self):
-        pass
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+    def _get_html_fields(self):
+        field_data = super()._get_field_data()
+        form_defaults = super()._get_field_form_defaults()
+
+
+        html = ''
+        if self.choices:
+            for row in self.choices:
+                temp = """<input class = '{}' type='checkbox' {} value='{}' """.format(self.style, form_defaults, list(row.values())[0])
+
+                if self.field_name:
+                    if self.multiple:
+                        temp += """name='{}[]' """.format(self.field_name)
+                    else:
+                        temp += """name='{}' """.format(self.field_name)
+
+                if field_data is not None and list(row.values())[0] in field_data:
+                    temp += "checked='true' >"
+
+                temp += """<label for='{}' class='{}'>{}</label>""".format(self.field_name, self.style, str(list(row.keys())[0]).title())
+
+                html += temp
+
+        html += '</select></span>'
+
+        res = super()._get_html_fields()
+        res['html'] = html
+        return res
 
 
 class CharField(Fields):
@@ -75,16 +145,29 @@ class CharField(Fields):
         }}
 
     def _get_html_fields(self):
-        pass
+        html = """<span> <input class='{}' type='text' {} """.format(self.style, super()._get_field_form_defaults())
+        if self.max_length:
+            html += """minlength='{}' """.format(self.min_length)
+
+        if self.max_length:
+            html += """maxlength='{}' """.format(self.max_length)
+
+        html += '/></span>'
+
+        res = super()._get_html_fields()
+        res['html'] = html
+        return res
 
 
 class ColorField(Fields):
-
-    def _get_html_fields(self):
-        pass
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+    def _get_html_fields(self):
+        html = """<span> <input class='{}' type='color' {} /></span>""".format(self.style, super()._get_field_form_defaults())
+        res = super()._get_html_fields()
+        res['html'] = html
+        return res
 
 
 class DateField(Fields):
@@ -102,7 +185,18 @@ class DateField(Fields):
         }}
 
     def _get_html_fields(self):
-        pass
+        html = """<span> <input class='{}' type='date' {} """.format(self.style, super()._get_field_form_defaults())
+        if self.min_value:
+            html += """min='{}' """.format(self.min_value)
+
+        if self.max_value:
+            html += """max='{}' """.format(self.max_value)
+
+        html += '/></span>'
+
+        res = super()._get_html_fields()
+        res['html'] = html
+        return res
 
 
 class DataListField(__Choices):
@@ -110,12 +204,32 @@ class DataListField(__Choices):
         super().__init__(**kwargs)
 
     def _get_html_fields(self):
-        pass
+        field_data = super()._get_field_data()
+        html = """<span> <input class='{}' type='text' list='{}' {} temp_value='' />""".format(self.style, self.field_name, super()._get_field_form_defaults())
+
+
+        temp_value = ''
+        html += """<datalist id='{}' >""".format(self.field_name)
+        if self.choices:
+            for row in self.choices:
+                temp = """<option value='{}' >""".format(list(row.values())[0])
+                if field_data is not None and list(row.values())[0] in field_data:
+                    temp_value = """value='{}'""".format(list(row.values())[0])
+                html += temp
+
+        html += '</datalist></span>'
+
+        html = html.replace("temp_value=''", temp_value)
+        res = super()._get_base_html_fields()
+        res['html'] = html
+        return res
 
 
 class DateTimeField(DateField):
     def _get_html_fields(self):
-        pass
+        res = super()._get_html_fields()
+        res['html'] = res['html'].replace("type='date'", "type='datetime-local'")
+        return res
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -130,9 +244,25 @@ class IntegerField(Fields):
         self.max_value = max_value
         self.min_value = min_value
         self.step = step
+        if self._get_field_type(self) == 'IntegerField':
+            self.step = int(self.step)
 
     def _get_html_fields(self):
-        pass
+        html = """<span> <input class='{}' type='number' {} """.format(self.style, super()._get_field_form_defaults())
+        if self.min_value:
+            html += """min='{}' """.format(self.min_value)
+
+        if self.max_value:
+            html += """max='{}' """.format(self.max_value)
+
+        if self.step:
+            html += """step='{}' """.format(self.step)
+
+        html += '/></span>'
+
+        res = super()._get_html_fields()
+        res['html'] = html
+        return res
 
     def as_json(self) -> {}:
         return {**super().as_json(),**{
@@ -147,7 +277,7 @@ class DecimalField(IntegerField):
         super().__init__(**kwargs)
 
     def _get_html_fields(self):
-        pass
+        return super()._get_html_fields()
 
 
 class EmailField(Fields):
@@ -155,7 +285,10 @@ class EmailField(Fields):
         super().__init__(**kwargs)
 
     def _get_html_fields(self):
-        pass
+        html = """<span> <input class='{}' type='email' {} /></span>""".format(self.style, super()._get_field_form_defaults())
+        res = super()._get_html_fields()
+        res['html'] = html
+        return res
 
 
 class FileField(Fields):
@@ -171,7 +304,7 @@ class FileField(Fields):
         self.src = src
 
     def _get_html_fields(self):
-        pass
+        return super()._get_html_fields()
 
 
 class FloatField(IntegerField):
@@ -179,7 +312,7 @@ class FloatField(IntegerField):
         super().__init__(**kwargs)
 
     def _get_html_fields(self):
-        pass
+        return super()._get_html_fields()
 
 
 class HiddenField(Fields):
@@ -187,7 +320,10 @@ class HiddenField(Fields):
         super().__init__(**kwargs)
 
     def _get_html_fields(self):
-        pass
+        html = """<span> <input class='{}' type='hidden' {} /></span>""".format(self.style, super()._get_field_form_defaults())
+        res = super()._get_html_fields()
+        res['html'] = html
+        return res
 
 
 class ImageField(FileField):
@@ -200,7 +336,7 @@ class ImageField(FileField):
         self.file_type = 'image/*'
 
     def _get_html_fields(self):
-        pass
+        return super()._get_html_fields()
 
 
 class PasswordField(CharField):
@@ -227,6 +363,11 @@ class PasswordField(CharField):
             'must_contain_lower_case': self.must_contain_lower_case,
         }}
 
+    def _get_html_fields(self):
+        res = super()._get_html_fields()
+        res['html'] = res['html'].replace("type='text'", "type='password'")
+        return res
+
 
 class PhoneField(CharField):
 
@@ -241,7 +382,9 @@ class PhoneField(CharField):
         }}
 
     def _get_html_fields(self):
-        pass
+        res = super()._get_html_fields()
+        res['html'] = res['html'].replace("type='text'", "type='tel'")
+        return res
 
 
 class RadioField(__Choices):
@@ -249,7 +392,31 @@ class RadioField(__Choices):
         super().__init__(**kwargs)
 
     def _get_html_fields(self):
-        pass
+        field_data = super()._get_field_data()
+        form_defaults = super()._get_field_form_defaults()
+
+
+        html = ''
+        if self.choices:
+            for row in self.choices:
+                temp = """<input class = '{}' type='radio' {} value='{}' """.format(self.style, form_defaults, list(row.values())[0])
+
+                if self.field_name:
+
+                        temp += """name='{}' """.format(self.field_name)
+
+                if field_data is not None and list(row.values())[0] in field_data:
+                    temp += "checked='true' >"
+
+                temp += """<label for='{}' class='{}'>{}</label>""".format(self.field_name, self.style, str(list(row.keys())[0]).title())
+
+                html += temp
+
+        html += '</select></span>'
+
+        res = super()._get_html_fields()
+        res['html'] = html
+        return res
 
 
 class RangeField(IntegerField):
@@ -257,7 +424,7 @@ class RangeField(IntegerField):
         super().__init__(**kwargs)
 
     def _get_html_fields(self):
-        pass
+        return super()._get_html_fields()
 
 
 class ResetButtonField(BaseButtonField):
@@ -266,7 +433,7 @@ class ResetButtonField(BaseButtonField):
         self.field_type = 'reset'
 
     def _get_html_fields(self):
-        pass
+        return super()._get_html_fields()
 
 
 class SlugField(CharField):
@@ -274,7 +441,7 @@ class SlugField(CharField):
         super().__init__(**kwargs)
 
     def _get_html_fields(self):
-        pass
+        return super()._get_html_fields()
 
 
 class SubmitButtonField(BaseButtonField):
@@ -283,7 +450,7 @@ class SubmitButtonField(BaseButtonField):
         self.field_type = 'submit'
 
     def _get_html_fields(self):
-        pass
+        return super()._get_html_fields()
 
 
 class TextField(Fields):
@@ -308,14 +475,34 @@ class TextField(Fields):
         }}
 
     def _get_html_fields(self):
-        pass
+        html = """<span> <textarea class='{}' type='number' {} """.format(self.style, super()._get_field_form_defaults())
+        if self.min_length:
+            html += """min='{}' """.format(self.min_length)
+
+        if self.max_length:
+            html += """max='{}' """.format(self.max_length)
+
+        if self.cols:
+            html += """cols='{}' """.format(self.cols)
+
+        if self.rows:
+            html += """rows='{}' """.format(self.rows)
+
+        html += '/></textarea></span>'
+
+        res = super()._get_html_fields()
+        res['html'] = html
+        return res
+
 
 class TimeField(DateField):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def _get_html_fields(self):
-        pass
+        res = super()._get_html_fields()
+        res['html'] = res['html'].replace("type='date'", "type='time'")
+        return res
 
 
 class UrlField(Fields):
@@ -323,7 +510,10 @@ class UrlField(Fields):
         super().__init__(**kwargs)
 
     def _get_html_fields(self):
-        pass
+        html = """<span> <input class='{}' type='url' {} /></span>""".format(self.style, super()._get_field_form_defaults())
+        res = super()._get_html_fields()
+        res['html'] = html
+        return res
 
 
 class UuidField(Fields):
@@ -331,4 +521,7 @@ class UuidField(Fields):
         super().__init__(**kwargs)
 
     def _get_html_fields(self):
-        pass
+        html = """<span> <input class='{}' type='text' {} /></span>""".format(self.style, super()._get_field_form_defaults())
+        res = super()._get_html_fields()
+        res['html'] = html
+        return res

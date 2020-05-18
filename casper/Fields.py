@@ -13,7 +13,7 @@ class BaseField:
     label = None
     field_name = None
 
-    def as_json(self) -> {}:
+    def as_json(self) -> dict:
         return {
             'field_type': self._get_field_type(self),
             'field_name': self.field_name,
@@ -22,10 +22,28 @@ class BaseField:
         }
 
     def as_html(self) -> str:
-        return " "
+        html = """<div class=''>field_help_text field_label field_html <br><br> field_error</div>""".format(self.style)
+        return self.__html_output(html=html)
 
     def as_p(self) -> str:
-        return " "
+        html = """<p class=''>field_help_text field_label field_html field_error</p>""".format(self.style)
+        return self.__html_output(html=html)
+
+    def as_table(self) -> str:
+        html = """<div class=''><span>field_help_text field_label field_html field_error</span></div>""".format(self.style)
+        return self.__html_output(html=html)
+
+    def as_u(self) -> str:
+        html = """<li class=''><span>field_help_text field_label field_html field_error</span></li>""".format(self.style)
+        return self.__html_output(html=html)
+
+    def __html_output(self, html) -> str:
+        fields = self._get_html_fields()
+        return html.replace('field_help_text', fields['help_text']) \
+            .replace('field_label', fields['label']) \
+            .replace('field_html', fields['html']) \
+            .replace('field_error', fields['error'])\
+            .replace('None', '')
 
     def _get_html_fields(self):
         raise NotImplementedError
@@ -48,12 +66,12 @@ class BaseButtonField(BaseField):
         self.style = style
         super().__init__()
 
-    def as_json(self) -> {}:
+    def as_json(self) -> dict:
         return {**super().as_json(),**{
             'button_type': self.button_type
         }}
 
-    def _get_html_fields(self):
+    def _get_html_fields(self) -> dict:
         return {
             'html' : """<input class='{}' type='{}' name='{}' id='id_{}' />""".format(self.style, self.button_type, self.field_name, self.field_name),
             'error': '',
@@ -69,6 +87,7 @@ class Fields(BaseField):
     allow_blank = True
     allow_null = True
     read_only = False
+    disabled = False
     regex = None
     place_holder = None
     help_text = None
@@ -80,16 +99,17 @@ class Fields(BaseField):
     auto_complete = False
     validators = None
 
-    def __init__(self, default=None, required: bool=True, allow_null: bool=True,
+    def __init__(self, default=None, required: bool=False, allow_null: bool=True,
                  allow_blank: bool=True, read_only: bool=False, label:str=None, regex:str=None,
                  place_holder:str=None, custom_error:str=None, help_text:str=None,
                  widget: Widgets=None,auto_focus:bool=False, auto_complete:bool = False,
-                 validators:list = None, style:str=None, **kwargs):
+                 validators:list = None, style:str=None, disabled:bool=False, **kwargs):
         self.required = required
         self.default = default
         self.allow_blank = allow_blank
         self.allow_null = allow_null
         self.read_only = read_only
+        self.disabled = disabled
         self.label = label
         self.regex = regex
         self.place_holder = place_holder
@@ -106,30 +126,26 @@ class Fields(BaseField):
 
 
 
-    def __validate_created_field(self):
+    def __validate_created_field(self) -> None:
         if self.required and self.default:
             raise FieldCreateFailedException('Cannot set required to True when a default is provided')
-
 
     def _get_field_data(self):
         if not self.data:
             return self.default
         return self.data
 
-
     def _set_data(self, data) -> None:
         self.data = data
-
 
     def _set_default(self, default) -> None:
         self.default = default
 
-    def _set_error(self, error:str):
+    def _set_error(self, error:str) -> None:
         if self.custom_error:
             self.error = error
         else:
             self.error = error
-
 
     def validate(self, data=None):
         if data is None:
@@ -140,22 +156,26 @@ class Fields(BaseField):
         try:
             data = form_validator.run(data=data)
         except ValidationFailedException as e:
-            if self.custom_error is not None:
-                self.error = self.custom_error
-                raise ValidationFailedException(self.custom_error)
-            else:
-                self.error = str(e)
-                raise ValidationFailedException(str(e))
+            error = str(e)
+            self._set_error(error)
+            raise ValidationFailedException(self.custom_error)
 
 
+        # user defined validators
         if self.validators:
-            for validator in self.validators:
-                if isinstance(validator, Validator):
-                    data = validator.run(data=data)
+            try:
+                for validator in self.validators:
+                    if isinstance(validator, Validator):
+                        data = validator.run(data=data)
+            except Exception as e:
+                error = str(e)
+                self._set_error(error)
+                raise ValidationFailedException(self.custom_error)
+
         self.clean_data = data
         return self.clean_data
 
-    def as_json(self) -> {}:
+    def as_json(self) -> dict:
         return {**super().as_json(),**{
             'required': self.required,
             'default': self.default,
@@ -170,12 +190,16 @@ class Fields(BaseField):
             'auto_complete':self.auto_complete,
         }}
 
-    def _get_html_fields(self):
+    def _get_base_html_fields(self) -> dict:
+        label=None
+        if self.label:
+            label = self.label.title()
         res = {
-            'html' : '',
+            'html': '',
             'error': '',
-            'help_text':'',
-            'label': """<span><label class='{}' for='{}'>{}</label></span>""".format(self.style, self.field_name, self.label)
+            'help_text': '',
+            'label': """<span><label class='{}' for='{}'>{}</label></span><br>""".format(self.style, self.field_name,
+                                                                                         label)
         }
         if self.error:
             res['error'] = """<span class='form_field_error'>{}</span""".format(self.error)
@@ -183,6 +207,48 @@ class Fields(BaseField):
             res['error'] = """<span class='form_help_text'>{}</span""".format(self.help_text)
 
         return res
+
+    def _get_html_fields(self) -> dict:
+        return self._get_base_html_fields()
+
+    def _get_field_form_defaults(self) -> str:
+        defaults = ''
+        if self.place_holder:
+            defaults += """pattern='{}' """.format(self.regex)
+
+        if self.regex:
+            defaults += """placeholder='{}' """.format(self.place_holder)
+
+        if self.field_name:
+            defaults += """id='id_{}' """.format(self.field_name)
+
+        field_type = self._get_field_type(self)
+
+        if not field_type in ['CheckBoxField','ChoiceField', 'RadioField', 'DataListField']:
+            if self._get_field_data():
+                defaults += """value='{}' """.format(self._get_field_data())
+
+            if self.auto_complete:
+                defaults += """autocomplete='on' """
+
+        if not field_type in ['CheckBoxField','ChoiceField']:
+            if self.required:
+                defaults += """required='true' """
+
+        if not field_type in ['CheckBoxField', 'RadioField']:
+            if self.field_name:
+                defaults += """name='{}' """.format(self.field_name)
+
+        if self.auto_focus:
+            defaults += """autofocus='true' """
+
+        if self.read_only:
+            defaults += """readonly='true' """
+
+        if self.disabled:
+            defaults += """disabled='true' """
+
+        return defaults
 
 
 class FormValidator(Validator):
@@ -244,11 +310,24 @@ class FormValidator(Validator):
 
     @staticmethod
     def validate_choice_field(data, choices) -> str:
-        data_as_list = str(data).split(',')
-        for val in data_as_list:
-            if not val in choices:
+        choice_keys = []
+        for val in choices:
+            choice_keys.append(list(val.values())[0])
+        for val in data:
+            if not val in choice_keys:
                 raise ValidationFailedException("""{} is not a valid option for this field""".format(val))
         return str(data)
+
+    @staticmethod
+    def _slugify(text):
+        non_url_safe = ['"', '#', '$', '%', '&', '+',
+                        ',', '/', ':', ';', '=', '?',
+                        '@', '[', '\\', ']', '^', '`',
+                        '{', '|', '}', '~', "'"]
+        translate_table = {ord(char): u'' for char in non_url_safe}
+        text = text.translate(translate_table)
+        text = u'_'.join(text.split())
+        return text
 
     @staticmethod
     def parse_to_time(data):
@@ -257,7 +336,7 @@ class FormValidator(Validator):
         except Exception:
             raise ValidationFailedException('Invalid datetime object')
 
-    def CharField(self, data):
+    def CharField(self, data) -> str:
         if getattr(self.field, 'max_length', None) is not None:
             self.check_max_length(data=data, max_length=getattr(self.field, 'max_length'))
 
@@ -266,13 +345,13 @@ class FormValidator(Validator):
         return str(data)
 
     @staticmethod
-    def ColorField(data):
+    def ColorField(data) -> str:
         if not re.match(r'^#(?:[0-9a-fA-F]{3}){1,2}$', data):
             raise ValidationFailedException("Invalid hex color")
         return str(data)
 
     @staticmethod
-    def BooleanField(data):
+    def BooleanField(data) -> bool:
         try:
             if type(data) == str:
                 data = data.lower()
@@ -294,10 +373,10 @@ class FormValidator(Validator):
         except Exception:
             raise ValidationFailedException('Invalid Boolean')
 
-    def CheckBoxField(self, data):
+    def CheckBoxField(self, data) -> str:
         return self.validate_choice_field(data=data, choices=getattr(self.field, 'choices'))
 
-    def ChoiceField(self, data):
+    def ChoiceField(self, data) -> str:
         return self.validate_choice_field(data=data, choices=getattr(self.field, 'choices'))
 
     def DateField(self, data):
@@ -338,7 +417,7 @@ class FormValidator(Validator):
             raise ValidationFailedException('Invalid numeric value for a decimal')
 
     @staticmethod
-    def EmailField(data):
+    def EmailField(data) -> str:
         try:
             data = str(data)
             if not re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", data):
@@ -352,7 +431,7 @@ class FormValidator(Validator):
             raise ValidationFailedException('Invalid email')
         return data
 
-    def IntegerField(self, data):
+    def IntegerField(self, data) -> int:
         try:
             data = str(data)
             for char in data:
@@ -370,7 +449,7 @@ class FormValidator(Validator):
             self.check_min_value(data=data, min_value=getattr(self.field, 'min_value'))
         return int(data)
 
-    def FloatField(self, data):
+    def FloatField(self, data) -> float:
         if getattr(self.field, 'max_value', None) is not None:
             self.check_max_value(data=data, max_value=getattr(self.field, 'max_value'))
 
@@ -390,7 +469,7 @@ class FormValidator(Validator):
 
         return data
 
-    def RadioField(self, data):
+    def RadioField(self, data) -> str:
         return self.validate_choice_field(data=data, choices=getattr(self.field, 'choices'))
 
     def TimeField(self, data):
@@ -407,16 +486,16 @@ class FormValidator(Validator):
 
         return data
 
-    def SlugField(self, data):
+    def SlugField(self, data) -> str:
         if getattr(self.field, 'max_length', None) is not None:
             self.check_max_length(data=data, max_length=getattr(self.field, 'max_length'))
 
         if getattr(self.field, 'min_length', None) is not None:
             self.check_min_length(data=data, min_length=getattr(self.field, 'min_length'))
-        return str(data)
+        return self._slugify(str(data))
 
     @staticmethod
-    def UrlField(data):
+    def UrlField(data) -> str:
 
         try:
             data = str(data)
@@ -429,7 +508,7 @@ class FormValidator(Validator):
         return data
 
     @staticmethod
-    def UuidField(data):
+    def UuidField(data) -> str:
         try:
             data = str(data)
             if not re.match(
@@ -447,7 +526,7 @@ class FormValidator(Validator):
     def ImageField(self, data):
         return data
 
-    def TextField(self, data):
+    def TextField(self, data) -> str:
         if getattr(self.field, 'max_length', None) is not None:
             self.check_max_length(data=data, max_length=getattr(self.field, 'max_length'))
 
@@ -455,7 +534,7 @@ class FormValidator(Validator):
             self.check_min_length(data=data, min_length=getattr(self.field, 'min_length'))
         return str(data)
 
-    def PasswordField(self, data):
+    def PasswordField(self, data) -> str:
         has_number = has_upper = has_lower = has_symbol = False
         try:
             data = str(data)
@@ -496,7 +575,7 @@ class FormValidator(Validator):
 
         return data
 
-    def PhoneField(self, data):
+    def PhoneField(self, data) -> str:
         try:
             data = str(data)
             if not re.match(

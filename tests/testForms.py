@@ -3,11 +3,13 @@ import time
 from datetime import timedelta
 
 class LoginForm(forms.Form):
-    username = forms.CharField(default='tr', max_length=10, custom_error='not valid', required=False)
+    username = forms.CharField(default='tr', max_length=10, custom_error='not valid')
     email = forms.EmailField(default='ert@ge.c', required=False, label='user_email')
     age = forms.IntegerField(default='5', required=False)
-    choice = forms.CheckBoxField(choices=['gender'], default='gender', required=False)
-    data_list = forms.DataListField(choices=['firefox', 'chrome'], required=False)
+    checkbox = forms.CheckBoxField(choices=['gender', 'age'], default='gender', required=False)
+    choice = forms.ChoiceField(choices=['gender', 'age'], default='gender', required=False)
+    radio = forms.RadioField(choices=['gender', 'age'], default='gender', required=False)
+    data_list = forms.DataListField(choices=['firefox', 'chrome'], required=False, default=['chrome'])
     boolean = forms.BooleanField(required=False,default='No')
     decimal = forms.DecimalField(default='45', required=False)
     date = forms.DateField(default='2020.05.12', required=False)
@@ -16,6 +18,7 @@ class LoginForm(forms.Form):
     password = forms.PasswordField(must_contain_lower_case=True, must_contain_number=True, must_contain_symbol=False,default='Passwprd1',required=False, min_length=5)
     phone = forms.PhoneField(default='0456432234', internationalize=False, required=False)
     url = forms.UrlField(default='www.google.com', required=False)
+    textarea = forms.TextField(cols=4)
 
     def validate_age(self):
         data = self.initial_data()
@@ -42,7 +45,7 @@ print(login.is_valid())
 print(login.clean_data())
 print(login.errors())
 print(login.as_json())
-# print(login.age)
+print(login.as_html())
 
 
 end_time = time.monotonic()

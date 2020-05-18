@@ -159,10 +159,18 @@ class BaseForm:
     def __as_p(self):
         return "as p"
 
-    def __as_html(self):
-        return " as html"
+    def as_html(self) -> str:
+        tail = ''
+        html = ''
+        form_fields = getattr(self, 'all_form_fields', [])
+        for key, val in form_fields:
+            if isinstance(val, SubmitButtonField) or isinstance(val, ResetButtonField):
+                tail = tail + val.as_html()
+            else:
+                html = html + val.as_html()
+        return (self.__get_form_output_header() + html + tail + self.__get_html_output_base()).replace('None','')
 
-    def __as_table(self):
+    def as_table(self):
         return "as table"
 
     def as_json(self) -> list:
@@ -172,6 +180,32 @@ class BaseForm:
         for key,val in form_fields:
             response.append(val.as_json())
         return response
+
+    def __get_form_output_header(self) -> str:
+        has_file = False
+        replace = ''
+        html = """<form class='{}' action='{}' method='{}' name='{}' id='id_{}' form_enctype>"""\
+            .format(self.__style, self.__url, self.__method, self.__form_name, self.__form_name)
+
+        form_fields = getattr(self, 'all_form_fields',[])
+        for key,val in form_fields:
+            if isinstance(val, FileField):
+                has_file = True
+        if has_file:
+            replace = 'enctype="multipart/form-data"'
+        return html.replace('form_enctype', replace)
+
+    def __get_html_output_base(self) -> str:
+        has_submit = False
+        replace = ''
+        html = """ form_submit </form>"""
+        form_fields = getattr(self, 'all_form_fields',[])
+        for key,val in form_fields:
+            if isinstance(val, SubmitButtonField):
+                has_submit = True
+        if not has_submit:
+            replace = '<input type="submit" value="Submit">'
+        return html.replace('form_submit', replace)
 
 
 class Form(BaseForm, metaclass=DeclaredFieldsMetaClass):
