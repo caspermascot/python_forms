@@ -2,7 +2,7 @@ from casper.Fields import Fields, BaseButtonField
 
 
 class BooleanField(Fields):
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
     def __init__(self, **kwargs):
@@ -10,7 +10,7 @@ class BooleanField(Fields):
 
 
 class ButtonField(BaseButtonField):
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
     def __init__(self, **kwargs):
@@ -19,7 +19,7 @@ class ButtonField(BaseButtonField):
 
 
 class __Choices(Fields):
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
     choices = None
@@ -38,7 +38,7 @@ class __Choices(Fields):
 
 
 class ChoiceField(__Choices):
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
     multiple = False
@@ -53,7 +53,7 @@ class ChoiceField(__Choices):
 
 
 class CheckBoxField(ChoiceField):
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
     def __init__(self, **kwargs):
@@ -74,13 +74,13 @@ class CharField(Fields):
             'min_length': self.min_length,
         }}
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
 
 class ColorField(Fields):
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
     def __init__(self, **kwargs):
@@ -101,7 +101,7 @@ class DateField(Fields):
             'min_value': self.min_value,
         }}
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
 
@@ -109,12 +109,12 @@ class DataListField(__Choices):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
 
 class DateTimeField(DateField):
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
     def __init__(self, **kwargs):
@@ -131,7 +131,7 @@ class IntegerField(Fields):
         self.min_value = min_value
         self.step = step
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
     def as_json(self) -> {}:
@@ -146,7 +146,7 @@ class DecimalField(IntegerField):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
 
@@ -154,7 +154,7 @@ class EmailField(Fields):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
 
@@ -170,7 +170,7 @@ class FileField(Fields):
         self.file_type = file_type
         self.src = src
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
 
@@ -178,7 +178,7 @@ class FloatField(IntegerField):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
 
@@ -186,7 +186,7 @@ class HiddenField(Fields):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
 
@@ -199,7 +199,7 @@ class ImageField(FileField):
         self.height = height
         self.file_type = 'image/*'
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
 
@@ -240,7 +240,7 @@ class PhoneField(CharField):
             'internationalize': self.internationalize,
         }}
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
 
@@ -248,7 +248,7 @@ class RadioField(__Choices):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
 
@@ -256,7 +256,7 @@ class RangeField(IntegerField):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
 
@@ -265,7 +265,7 @@ class ResetButtonField(BaseButtonField):
         super().__init__(**kwargs)
         self.field_type = 'reset'
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
 
@@ -273,7 +273,7 @@ class SlugField(CharField):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
 
@@ -282,7 +282,7 @@ class SubmitButtonField(BaseButtonField):
         super().__init__(**kwargs)
         self.field_type = 'submit'
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
 
@@ -307,14 +307,14 @@ class TextField(Fields):
             'rows': self.rows,
         }}
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
 class TimeField(DateField):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
 
@@ -322,7 +322,7 @@ class UrlField(Fields):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass
 
 
@@ -330,5 +330,5 @@ class UuidField(Fields):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         pass

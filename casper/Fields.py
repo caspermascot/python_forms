@@ -15,7 +15,7 @@ class BaseField:
 
     def as_json(self) -> {}:
         return {
-            'field_type': self.get_field_type(self),
+            'field_type': self._get_field_type(self),
             'field_name': self.field_name,
             'label' : self.label,
             'style' : self.style
@@ -27,16 +27,16 @@ class BaseField:
     def as_p(self) -> str:
         return " "
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         raise NotImplementedError
 
-    def set_field_name(self, name:str=None) -> None:
+    def _set_field_name(self, name:str=None) -> None:
         self.field_name = name
         if not self.label:
             self.label = name
 
     @staticmethod
-    def get_field_type(field) -> str:
+    def _get_field_type(field) -> str:
         return ''.join([i for i in (str(type(field)).split('.'))[-1] if i.isalpha()])
 
 
@@ -53,7 +53,7 @@ class BaseButtonField(BaseField):
             'button_type': self.button_type
         }}
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         return {
             'html' : """<input class='{}' type='{}' name='{}' id='id_{}' />""".format(self.style, self.button_type, self.field_name, self.field_name),
             'error': '',
@@ -111,23 +111,29 @@ class Fields(BaseField):
             raise FieldCreateFailedException('Cannot set required to True when a default is provided')
 
 
-    def get_field_data(self):
+    def _get_field_data(self):
         if not self.data:
             return self.default
         return self.data
 
 
-    def set_data(self, data) -> None:
+    def _set_data(self, data) -> None:
         self.data = data
 
 
-    def set_default(self, default) -> None:
+    def _set_default(self, default) -> None:
         self.default = default
+
+    def _set_error(self, error:str):
+        if self.custom_error:
+            self.error = error
+        else:
+            self.error = error
 
 
     def validate(self, data=None):
         if data is None:
-            data = self.get_field_data()
+            data = self._get_field_data()
 
         #general validation
         form_validator = FormValidator(self)
@@ -164,7 +170,7 @@ class Fields(BaseField):
             'auto_complete':self.auto_complete,
         }}
 
-    def get_html_fields(self):
+    def _get_html_fields(self):
         res = {
             'html' : '',
             'error': '',
@@ -207,7 +213,7 @@ class FormValidator(Validator):
                 if not re.match(field.regex, data):
                     raise ValidationFailedException("""Value does not match the pattern {}""".format(field.regex))
 
-            field_type = field.get_field_type(field)
+            field_type = field._get_field_type(field)
             if hasattr(self, field_type) and callable(getattr(self, field_type)):
                 func = getattr(self, field_type)
                 return func(data)
@@ -335,6 +341,9 @@ class FormValidator(Validator):
     def EmailField(data):
         try:
             data = str(data)
+            if not re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", data):
+                raise Exception
+
             from email.utils import parseaddr
             parsed_email = parseaddr(data)
             if parsed_email[1] != data:

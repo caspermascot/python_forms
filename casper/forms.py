@@ -62,7 +62,7 @@ class BaseForm:
     __url = None
 
 
-    def __init__(self, data:dict=None, initial:dict=None, **kwargs) -> None:
+    def __init__(self, data:dict=None, initial:dict=None) -> None:
         self.__fields = self.__get_form_fields()
         self.__form_name = self.__get_form_name()
         self.__method = self.__get_form_method()
@@ -84,13 +84,22 @@ class BaseForm:
         form_fields = getattr(self, 'all_form_fields',[])
         for key,val in form_fields:
             if isinstance(val, BaseField):
-                val.set_field_name(key)
+                val._set_field_name(key)
 
     def __validate(self):
         self.__validated = True
         for field in self.__fields:
             try:
                 self.__clean_data[field] = self.__fields[field].validate()
+                field_custom_validation = """validate_{}""".format(field)
+                if hasattr(self, field_custom_validation) and callable(getattr(self, field_custom_validation)):
+                    func = getattr(self, field_custom_validation)
+                    try:
+                        self.__clean_data[field] = func()
+                    except ValidationFailedException as e:
+                        error = str(e)
+                        self.__fields[field]._set_error(error)
+                        raise ValidationFailedException(error)
             except ValidationFailedException as e:
                 self.__errors[field] = str(e)
             except Exception as e:
@@ -102,19 +111,25 @@ class BaseForm:
         else:
             self.valid = True
 
+    def data(self) -> dict:
+        return self.__data
+
     def __set_data(self, data:dict) -> None:
         self.__data = data
         for key in data:
             if key in self.__fields:
-                self.__fields[key].set_data(data[key])
+                self.__fields[key]._set_data(data[key])
 
         self.__validate()
+
+    def initial_data(self) -> dict:
+        return self.__initial
 
     def __set_initial_data(self, initial:dict) -> None:
         self.__initial = initial
         for key in initial:
             if key in self.__fields:
-                self.__fields[key].set_default(initial[key])
+                self.__fields[key]._set_default(initial[key])
 
     def clean_data(self) -> dict:
         if self.__validated is False:

@@ -1,4 +1,4 @@
-from casper import forms
+from casper import forms, ValidationFailedException
 import time
 from datetime import timedelta
 
@@ -17,10 +17,15 @@ class LoginForm(forms.Form):
     phone = forms.PhoneField(default='0456432234', internationalize=False, required=False)
     url = forms.UrlField(default='www.google.com', required=False)
 
+    def validate_age(self):
+        data = self.initial_data()
+        if not 'age' in data or data['age'] < 5:
+            raise ValidationFailedException('custom error')
+        return data['age']
 
     class Meta:
         form_method = 'get'
-        form_url = '/jkl/'
+        form_url = '/login/'
 
 
 class RegisterForm(forms.Form):
@@ -30,12 +35,14 @@ class RegisterForm(forms.Form):
 
 
 start_time = time.monotonic()
-data = initial ={'username':'ada','email':'email'}
-login = LoginForm()
+
+data = initial = {'username':'ada','email':'email@me.j','age':6}
+login = LoginForm(initial=initial)
 print(login.is_valid())
 print(login.clean_data())
 print(login.errors())
 print(login.as_json())
+# print(login.age)
 
 
 end_time = time.monotonic()
