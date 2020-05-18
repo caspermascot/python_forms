@@ -82,11 +82,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Fields.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Fields.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../python_forms/casper/Fields.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="176">
-              <caret line="125" column="0" lean-forward="true" selection-start-line="125" selection-start-column="0" selection-end-line="125" selection-end-column="0" />
+              <caret line="125" column="0" lean-forward="false" selection-start-line="125" selection-start-column="0" selection-end-line="125" selection-end-column="0" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
                 <element signature="e#353#534#0" expanded="false" />
@@ -133,6 +133,16 @@
           </provider>
         </entry>
       </file>
+      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/../python_forms/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="105">
+              <caret line="7" column="0" lean-forward="true" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="testForms.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../python_forms/tests/testForms.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -174,6 +184,7 @@
         <option value="$PROJECT_DIR$/../python_forms/tests/testForms.py" />
         <option value="$PROJECT_DIR$/../python_forms/casper/form_fields.py" />
         <option value="$PROJECT_DIR$/../python_forms/casper/Fields.py" />
+        <option value="$PROJECT_DIR$/../python_forms/.gitignore" />
       </list>
     </option>
   </component>
@@ -756,7 +767,7 @@
     <entry file="file://$PROJECT_DIR$/../python_forms/casper/Fields.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="176">
-          <caret line="125" column="0" lean-forward="true" selection-start-line="125" selection-start-column="0" selection-end-line="125" selection-end-column="0" />
+          <caret line="125" column="0" lean-forward="false" selection-start-line="125" selection-start-column="0" selection-end-line="125" selection-end-column="0" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
             <element signature="e#353#534#0" expanded="false" />
@@ -799,6 +810,14 @@
             <element signature="e#16928#17472#0" expanded="false" />
             <element signature="e#17527#17538#0" expanded="false" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../python_forms/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="105">
+          <caret line="7" column="0" lean-forward="true" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
