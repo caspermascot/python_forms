@@ -7,34 +7,34 @@ from casper.widgets.widgets import Widgets, Validator
 
 
 class BaseField:
-    is_valid = False
+    _is_valid = False
     __validated = False
-    style = None
-    label = None
-    field_name = None
+    _style = None
+    _label = None
+    _field_name = None
 
     def as_json(self) -> dict:
         return {
             'field_type': self._get_field_type(self),
-            'field_name': self.field_name,
-            'label' : self.label,
-            'style' : self.style
+            'field_name': self._field_name,
+            'label' : self._label,
+            'style' : self._style
         }
 
     def as_html(self) -> str:
-        html = """<div class=''>field_help_text field_label field_html <br><br> field_error</div>""".format(self.style)
+        html = """<div class=''>field_help_text field_label field_html <br><br> field_error</div>""".format(self._style)
         return self.__html_output(html=html)
 
     def as_p(self) -> str:
-        html = """<p class=''>field_help_text field_label field_html field_error</p>""".format(self.style)
+        html = """<p class=''>field_help_text field_label field_html field_error</p>""".format(self._style)
         return self.__html_output(html=html)
 
     def as_table(self) -> str:
-        html = """<div class=''><span>field_help_text field_label field_html field_error</span></div>""".format(self.style)
+        html = """<div class=''><span>field_help_text field_label field_html field_error</span></div>""".format(self._style)
         return self.__html_output(html=html)
 
     def as_u(self) -> str:
-        html = """<li class=''><span>field_help_text field_label field_html field_error</span></li>""".format(self.style)
+        html = """<li class=''><span>field_help_text field_label field_html field_error</span></li>""".format(self._style)
         return self.__html_output(html=html)
 
     def __html_output(self, html) -> str:
@@ -49,21 +49,31 @@ class BaseField:
         raise NotImplementedError
 
     def _set_field_name(self, name:str=None) -> None:
-        self.field_name = name
-        if not self.label:
-            self.label = name
+        self._field_name = name
+        if not self._label:
+            self._label = name
 
     @staticmethod
     def _get_field_type(field) -> str:
         return ''.join([i for i in (str(type(field)).split('.'))[-1] if i.isalpha()])
 
+    # def __getattr__(self, item):
+    #     print(item)
+    #     if hasattr(self, str(item)):
+    #     #     return self.item
+    #     # if isinstance(item, str):
+    #     #     item = '_' + item
+    #         # if  hasattr(self,item):
+    #         print(item)
+    #             # return self.item
+    #     return None
 
 
 class BaseButtonField(BaseField):
     button_type = None
     def __init__(self, label:str=None,style:str = None, **kwargs):
-        self.label = label
-        self.style = style
+        self._label = label
+        self._style = style
         super().__init__()
 
     def as_json(self) -> dict:
@@ -73,7 +83,7 @@ class BaseButtonField(BaseField):
 
     def _get_html_fields(self) -> dict:
         return {
-            'html' : """<input class='{}' type='{}' name='{}' id='id_{}' />""".format(self.style, self.button_type, self.field_name, self.field_name),
+            'html' : """<input class='{}' type='{}' name='{}' id='id_{}' />""".format(self._style, self.button_type, self._field_name, self._field_name),
             'error': '',
             'help_text':'',
             'label': ''
@@ -81,71 +91,74 @@ class BaseButtonField(BaseField):
 
 
 class Fields(BaseField):
-    data = None
-    default = None
-    required = False
-    allow_blank = True
-    allow_null = True
-    read_only = False
-    disabled = False
-    regex = None
-    place_holder = None
-    help_text = None
-    custom_error = None
-    error = None
-    clean_data = None
-    widget = None
-    auto_focus = False
-    auto_complete = False
-    validators = None
+    _data = None
+    _default = None
+    _required = False
+    _allow_blank = True
+    _allow_null = True
+    _read_only = False
+    _disabled = False
+    _regex = None
+    _place_holder = None
+    _help_text = None
+    _custom_error = None
+    _error = None
+    _clean_data = None
+    _widget = None
+    _auto_focus = False
+    _auto_complete = False
+    _validators = None
 
     def __init__(self, default=None, required: bool=False, allow_null: bool=True,
                  allow_blank: bool=True, read_only: bool=False, label:str=None, regex:str=None,
                  place_holder:str=None, custom_error:str=None, help_text:str=None,
                  widget: Widgets=None,auto_focus:bool=False, auto_complete:bool = False,
                  validators:list = None, style:str=None, disabled:bool=False, **kwargs):
-        self.required = required
-        self.default = default
-        self.allow_blank = allow_blank
-        self.allow_null = allow_null
-        self.read_only = read_only
-        self.disabled = disabled
-        self.label = label
-        self.regex = regex
-        self.place_holder = place_holder
-        self.widget = widget
-        self.custom_error = custom_error
-        self.auto_complete = auto_complete
-        self.auto_focus = auto_focus
-        self.help_text = help_text
-        self.validators = validators
+        self._required = required
+        self._default = default
+        self._allow_blank = allow_blank
+        self._allow_null = allow_null
+        self._read_only = read_only
+        self._disabled = disabled
+        self._label = label
+        self._regex = regex
+        self._place_holder = place_holder
+        self._widget = widget
+        self._custom_error = custom_error
+        self._auto_complete = auto_complete
+        self._auto_focus = auto_focus
+        self._help_text = help_text
+        self._validators = validators
         self.__validate_created_field()
-        self.style = style
+        self._style = style
 
         super().__init__()
 
+    # def __setattr__(self, key, value):
+    #     print(value)
 
 
     def __validate_created_field(self) -> None:
-        if self.required and self.default:
+        if self._required and self._default:
             raise FieldCreateFailedException('Cannot set required to True when a default is provided')
 
     def _get_field_data(self):
-        if not self.data:
-            return self.default
-        return self.data
+        if not self._data:
+            return self._default
+        return self._data
 
     def _set_data(self, data) -> None:
-        self.data = data
+        self._data = data
+        self.validate()
 
     def _set_default(self, default) -> None:
-        self.default = default
+        self._default = default
 
     def _set_error(self, error:str) -> None:
-        if self.custom_error:
-            self.error = error
+        if self._custom_error:
+            self._error = error
         else:
-            self.error = error
+            self._error = error
 
     def validate(self, data=None):
         if data is None:
@@ -158,53 +171,54 @@ class Fields(BaseField):
         except ValidationFailedException as e:
             error = str(e)
             self._set_error(error)
-            raise ValidationFailedException(self.custom_error)
+            raise ValidationFailedException(self._custom_error)
 
 
         # user defined validators
-        if self.validators:
+        if self._validators:
             try:
-                for validator in self.validators:
+                for validator in self._validators:
                     if isinstance(validator, Validator):
                         data = validator.run(data=data)
             except Exception as e:
                 error = str(e)
                 self._set_error(error)
-                raise ValidationFailedException(self.custom_error)
+                raise ValidationFailedException(self._custom_error)
 
-        self.clean_data = data
-        return self.clean_data
+        self._clean_data = data
+        return self._clean_data
 
     def as_json(self) -> dict:
         return {**super().as_json(),**{
-            'required': self.required,
-            'default': self.default,
-            'allow_blank':self.allow_blank,
-            'allow_null': self.allow_null,
-            'read_only': self.read_only,
-            'regex': self.regex,
-            'place_holder': self.place_holder,
-            'help_text':self.help_text,
-            'custom_error':self.custom_error,
-            'auto_focus': self.auto_focus,
-            'auto_complete':self.auto_complete,
+            'required': self._required,
+            'default': self._default,
+            'data': self._data,
+            'allow_blank':self._allow_blank,
+            'allow_null': self._allow_null,
+            'read_only': self._read_only,
+            'regex': self._regex,
+            'place_holder': self._place_holder,
+            'help_text':self._help_text,
+            'custom_error':self._custom_error,
+            'auto_focus': self._auto_focus,
+            'auto_complete':self._auto_complete,
         }}
 
     def _get_base_html_fields(self) -> dict:
         label=None
-        if self.label:
-            label = self.label.title()
+        if self._label:
+            label = self._label.title()
         res = {
             'html': '',
             'error': '',
             'help_text': '',
-            'label': """<span><label class='{}' for='{}'>{}</label></span><br>""".format(self.style, self.field_name,
+            'label': """<span><label class='{}' for='{}'>{}</label></span><br>""".format(self._style, self._field_name,
                                                                                          label)
         }
-        if self.error:
-            res['error'] = """<span class='form_field_error'>{}</span""".format(self.error)
-        if self.help_text:
-            res['error'] = """<span class='form_help_text'>{}</span""".format(self.help_text)
+        if self._error:
+            res['error'] = """<span class='form_field_error'>{}</span""".format(self._error)
+        if self._help_text:
+            res['error'] = """<span class='form_help_text'>{}</span""".format(self._help_text)
 
         return res
 
@@ -213,14 +227,14 @@ class Fields(BaseField):
 
     def _get_field_form_defaults(self) -> str:
         defaults = ''
-        if self.place_holder:
-            defaults += """pattern='{}' """.format(self.regex)
+        if self._place_holder:
+            defaults += """pattern='{}' """.format(self._regex)
 
-        if self.regex:
-            defaults += """placeholder='{}' """.format(self.place_holder)
+        if self._regex:
+            defaults += """placeholder='{}' """.format(self._place_holder)
 
-        if self.field_name:
-            defaults += """id='id_{}' """.format(self.field_name)
+        if self._field_name:
+            defaults += """id='id_{}' """.format(self._field_name)
 
         field_type = self._get_field_type(self)
 
@@ -228,24 +242,24 @@ class Fields(BaseField):
             if self._get_field_data():
                 defaults += """value='{}' """.format(self._get_field_data())
 
-            if self.auto_complete:
+            if self._auto_complete:
                 defaults += """autocomplete='on' """
 
         if not field_type in ['CheckBoxField','ChoiceField']:
-            if self.required:
+            if self._required:
                 defaults += """required='true' """
 
         if not field_type in ['CheckBoxField', 'RadioField']:
-            if self.field_name:
-                defaults += """name='{}' """.format(self.field_name)
+            if self._field_name:
+                defaults += """name='{}' """.format(self._field_name)
 
-        if self.auto_focus:
+        if self._auto_focus:
             defaults += """autofocus='true' """
 
-        if self.read_only:
+        if self._read_only:
             defaults += """readonly='true' """
 
-        if self.disabled:
+        if self._disabled:
             defaults += """disabled='true' """
 
         return defaults
@@ -264,20 +278,20 @@ class FormValidator(Validator):
         field = self.field
         self.data = data
 
-        if field.required and not data:
+        if field._required and not data:
             raise ValidationFailedException('This field is required')
-        if not field.allow_null and data is None:
+        if not field._allow_null and data is None:
             raise ValidationFailedException('This field cannot be null')
-        if not field.allow_blank and not data:
+        if not field._allow_blank and not data:
             raise ValidationFailedException('This field cannot be blank')
 
         if data is None:
             return data
 
         try:
-            if field.regex:
-                if not re.match(field.regex, data):
-                    raise ValidationFailedException("""Value does not match the pattern {}""".format(field.regex))
+            if field._regex:
+                if not re.match(field._regex, data):
+                    raise ValidationFailedException("""Value does not match the pattern {}""".format(field._regex))
 
             field_type = field._get_field_type(field)
             if hasattr(self, field_type) and callable(getattr(self, field_type)):
@@ -337,11 +351,11 @@ class FormValidator(Validator):
             raise ValidationFailedException('Invalid datetime object')
 
     def CharField(self, data) -> str:
-        if getattr(self.field, 'max_length', None) is not None:
-            self.check_max_length(data=data, max_length=getattr(self.field, 'max_length'))
+        if getattr(self.field, '_max_length', None) is not None:
+            self.check_max_length(data=data, max_length=getattr(self.field, '_max_length'))
 
-        if getattr(self.field, 'min_length', None) is not None:
-            self.check_min_length(data=data, min_length=getattr(self.field, 'min_length'))
+        if getattr(self.field, '_min_length', None) is not None:
+            self.check_min_length(data=data, min_length=getattr(self.field, '_min_length'))
         return str(data)
 
     @staticmethod
@@ -374,18 +388,21 @@ class FormValidator(Validator):
             raise ValidationFailedException('Invalid Boolean')
 
     def CheckBoxField(self, data) -> str:
-        return self.validate_choice_field(data=data, choices=getattr(self.field, 'choices'))
+        return self.validate_choice_field(data=data, choices=getattr(self.field, '_choices'))
 
     def ChoiceField(self, data) -> str:
-        return self.validate_choice_field(data=data, choices=getattr(self.field, 'choices'))
+        return self.validate_choice_field(data=data, choices=getattr(self.field, '_choices'))
+
+    def DataListField(self, data) -> str:
+        return self.validate_choice_field(data=data, choices=getattr(self.field, '_choices'))
 
     def DateField(self, data):
         data = self.parse_to_time(data=data)
-        if getattr(self.field, 'max_value', None) is not None:
-            self.check_max_value(data=data, max_value=self.parse_to_time(getattr(self.field, 'max_value')),field='Date value')
+        if getattr(self.field, '_max_vale', None) is not None:
+            self.check_max_value(data=data, max_value=self.parse_to_time(getattr(self.field, '_max_vale')),field='Date value')
 
-        if getattr(self.field, 'min_value', None) is not None:
-            self.check_min_value(data=data, min_value=self.parse_to_time(getattr(self.field, 'min_value')),field='Date value')
+        if getattr(self.field, '_min_vale', None) is not None:
+            self.check_min_value(data=data, min_value=self.parse_to_time(getattr(self.field, '_min_vale')),field='Date value')
 
         if data.hour > 0:
             raise ValidationFailedException('Value is not a valid date')
@@ -396,20 +413,20 @@ class FormValidator(Validator):
             raise ValidationFailedException('Value is not a valid datetime')
 
         data = self.parse_to_time(data=data)
-        if getattr(self.field, 'max_value', None) is not None:
-            self.check_max_value(data=data, max_value=self.parse_to_time(getattr(self.field, 'max_value')))
+        if getattr(self.field, '_max_value', None) is not None:
+            self.check_max_value(data=data, max_value=self.parse_to_time(getattr(self.field, '_max_value')))
 
-        if getattr(self.field, 'min_value', None) is not None:
-            self.check_min_value(data=data, min_value=self.parse_to_time(getattr(self.field, 'min_value')))
+        if getattr(self.field, '_min_vale', None) is not None:
+            self.check_min_value(data=data, min_value=self.parse_to_time(getattr(self.field, '_min_vale')))
 
         return data
 
     def DecimalField(self, data):
-        if getattr(self.field, 'max_value', None) is not None:
-            self.check_max_value(data=data, max_value=getattr(self.field, 'max_value'))
+        if getattr(self.field, '_max_value', None) is not None:
+            self.check_max_value(data=data, max_value=getattr(self.field, '_max_value'))
 
-        if getattr(self.field, 'min_value', None) is not None:
-            self.check_min_value(data=data, min_value=getattr(self.field, 'min_value'))
+        if getattr(self.field, '_min_vale', None) is not None:
+            self.check_min_value(data=data, min_value=getattr(self.field, '_min_vale'))
         try:
             from decimal import Decimal
             return Decimal(str(data).replace(',','.'))
@@ -442,35 +459,35 @@ class FormValidator(Validator):
         except Exception:
             raise ValidationFailedException('Invalid integer')
 
-        if getattr(self.field, 'max_value', None) is not None:
-            self.check_max_value(data=data, max_value=getattr(self.field, 'max_value'))
+        if getattr(self.field, '_max_value', None) is not None:
+            self.check_max_value(data=data, max_value=getattr(self.field, '_max_value'))
 
-        if getattr(self.field, 'min_value', None) is not None:
-            self.check_min_value(data=data, min_value=getattr(self.field, 'min_value'))
+        if getattr(self.field, '_min_vale', None) is not None:
+            self.check_min_value(data=data, min_value=getattr(self.field, '_min_vale'))
         return int(data)
 
     def FloatField(self, data) -> float:
-        if getattr(self.field, 'max_value', None) is not None:
-            self.check_max_value(data=data, max_value=getattr(self.field, 'max_value'))
+        if getattr(self.field, '_max_value', None) is not None:
+            self.check_max_value(data=data, max_value=getattr(self.field, '_max_value'))
 
-        if getattr(self.field, 'min_value', None) is not None:
-            self.check_min_value(data=data, min_value=getattr(self.field, 'min_value'))
+        if getattr(self.field, '_min_vale', None) is not None:
+            self.check_min_value(data=data, min_value=getattr(self.field, '_min_vale'))
         try:
             return float(data)
         except Exception:
             raise ValidationFailedException('Invalid numeric value for a float')
 
     def RangeField(self, data):
-        if getattr(self.field, 'max_value', None) is not None:
-            self.check_max_value(data=data, max_value=getattr(self.field, 'max_value'))
+        if getattr(self.field, '_max_value', None) is not None:
+            self.check_max_value(data=data, max_value=getattr(self.field, '_max_value'))
 
-        if getattr(self.field, 'min_length', None) is not None:
-            self.check_min_value(data=data, min_value=getattr(self.field, 'min_value'))
+        if getattr(self.field, '_min_length', None) is not None:
+            self.check_min_value(data=data, min_value=getattr(self.field, '_min_vale'))
 
         return data
 
     def RadioField(self, data) -> str:
-        return self.validate_choice_field(data=data, choices=getattr(self.field, 'choices'))
+        return self.validate_choice_field(data=data, choices=getattr(self.field, '_choices'))
 
     def TimeField(self, data):
         if not re.match(
@@ -478,20 +495,20 @@ class FormValidator(Validator):
             raise ValidationFailedException('Value is not a valid time')
 
         data = self.parse_to_time(data=data)
-        if getattr(self.field, 'max_value', None) is not None:
-            self.check_max_value(data=data, max_value=self.parse_to_time(getattr(self.field, 'max_value')))
+        if getattr(self.field, '_max_value', None) is not None:
+            self.check_max_value(data=data, max_value=self.parse_to_time(getattr(self.field, '_max_value')))
 
-        if getattr(self.field, 'min_value', None) is not None:
-            self.check_min_value(data=data, min_value=self.parse_to_time(getattr(self.field, 'min_value')))
+        if getattr(self.field, '_min_value', None) is not None:
+            self.check_min_value(data=data, min_value=self.parse_to_time(getattr(self.field, '_min_vale')))
 
         return data
 
     def SlugField(self, data) -> str:
-        if getattr(self.field, 'max_length', None) is not None:
-            self.check_max_length(data=data, max_length=getattr(self.field, 'max_length'))
+        if getattr(self.field, '_max_length', None) is not None:
+            self.check_max_length(data=data, max_length=getattr(self.field, '_max_length'))
 
-        if getattr(self.field, 'min_length', None) is not None:
-            self.check_min_length(data=data, min_length=getattr(self.field, 'min_length'))
+        if getattr(self.field, '_min_length', None) is not None:
+            self.check_min_length(data=data, min_length=getattr(self.field, '_min_length'))
         return self._slugify(str(data))
 
     @staticmethod
@@ -527,11 +544,11 @@ class FormValidator(Validator):
         return data
 
     def TextField(self, data) -> str:
-        if getattr(self.field, 'max_length', None) is not None:
-            self.check_max_length(data=data, max_length=getattr(self.field, 'max_length'))
+        if getattr(self.field, '_max_length', None) is not None:
+            self.check_max_length(data=data, max_length=getattr(self.field, '_max_length'))
 
-        if getattr(self.field, 'min_length', None) is not None:
-            self.check_min_length(data=data, min_length=getattr(self.field, 'min_length'))
+        if getattr(self.field, '_min_length', None) is not None:
+            self.check_min_length(data=data, min_length=getattr(self.field, '_min_length'))
         return str(data)
 
     def PasswordField(self, data) -> str:
@@ -550,26 +567,26 @@ class FormValidator(Validator):
         except Exception:
             raise ValidationFailedException('Invalid password')
 
-        if getattr(self.field, 'max_length', None) is not None:
-            self.check_max_length(data=data, max_length=getattr(self.field, 'max_length'))
+        if getattr(self.field, '_max_length', None) is not None:
+            self.check_max_length(data=data, max_length=getattr(self.field, '_max_length'))
 
-        if getattr(self.field, 'min_length', None) is not None:
-            self.check_min_length(data=data, min_length=getattr(self.field, 'min_length'))
+        if getattr(self.field, '_min_length', None) is not None:
+            self.check_min_length(data=data, min_length=getattr(self.field, '_min_length'))
 
 
-        if getattr(self.field, 'must_contain_number', None):
+        if getattr(self.field, '_must_contain_number', None):
             if not has_number:
                 raise ValidationFailedException('Password must contain a numeric character')
 
-        if getattr(self.field, 'must_contain_symbol', None):
+        if getattr(self.field, '_must_contain_symbol', None):
             if not has_symbol:
                 raise ValidationFailedException('Password must contain a symbol')
 
-        if getattr(self.field, 'must_contain_upper_case', None):
+        if getattr(self.field, '_must_contain_upper_case', None):
             if not has_upper:
                 raise ValidationFailedException('Password must contain an upper case character')
 
-        if getattr(self.field, 'must_contain_lower_case', None):
+        if getattr(self.field, '_must_contain_lower_case', None):
             if not has_lower:
                 raise ValidationFailedException('Password must contain a lower case character')
 
@@ -584,7 +601,7 @@ class FormValidator(Validator):
                 raise Exception
         except Exception:
             raise ValidationFailedException('Invalid Phone')
-        if getattr(self.field, 'internationalize', None):
+        if getattr(self.field, '_internationalize', None):
             if data[:1] != '+' and data[:2] != '00':
                 raise ValidationFailedException('Phone must be in international format')
 

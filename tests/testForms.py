@@ -22,7 +22,7 @@ class LoginForm(forms.Form):
 
     def validate_age(self):
         data = self.initial_data()
-        if not 'age' in data or data['age'] < 5:
+        if not 'age' in data or data['age'] < 6:
             raise ValidationFailedException('custom error')
         return data['age']
 
@@ -41,11 +41,12 @@ start_time = time.monotonic()
 
 data = initial = {'username':'ada','email':'email@me.j','age':6}
 login = LoginForm(initial=initial)
-print(login.is_valid())
-print(login.clean_data())
-print(login.errors())
-print(login.as_json())
-print(login.as_html())
+# print(login.is_valid())
+# print(login.clean_data())
+# print(login.errors())
+# print(login.as_json())
+# print(login.as_html())
+print(login.decimal)
 
 
 end_time = time.monotonic()

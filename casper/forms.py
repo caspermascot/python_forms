@@ -1,10 +1,9 @@
 from casper import BaseField
-from casper.exceptions.exceptions import ValidationFailedException
 from casper.form_fields import *
 
 
 class DeclaredFieldsMetaClass(type):
-    def __new__(cls, name, bases, attrs):
+    def __new__(mcs, name, bases, attrs):
         fields = []
         form_fields = []
 
@@ -27,7 +26,7 @@ class DeclaredFieldsMetaClass(type):
                 if val in meta_object:
                     attrs['meta_'+val] = meta_object[val]
 
-        new_class = super(DeclaredFieldsMetaClass, cls).__new__(cls, name, bases, attrs)
+        new_class = super(DeclaredFieldsMetaClass, mcs).__new__(mcs, name, bases, attrs)
 
         # Walk through the MRO.
         declared_fields = {}
@@ -52,6 +51,7 @@ class BaseForm:
     valid = False
     __form_name = None
     __fields = None
+    __base_form_fields = None
     __validated = False
     __errors = {}
     __clean_data = {}
@@ -65,6 +65,7 @@ class BaseForm:
     def __init__(self, data:dict=None, initial:dict=None) -> None:
         self.__fields = self.__get_form_fields()
         self.__form_name = self.__get_form_name()
+        self.__base_form_fields = self.__get_base_fields()
         self.__method = self.__get_form_method()
         self.__url = self.__get_form_url()
         self.__set_field_names()
@@ -85,6 +86,14 @@ class BaseForm:
         for key,val in form_fields:
             if isinstance(val, BaseField):
                 val._set_field_name(key)
+
+    def __get_base_fields(self) -> list:
+        fields = getattr(self, 'all_form_fields', [])
+        # form_fields = getattr(self, 'all_form_fields', [])
+        for key, val in fields:
+            setattr(self,key,val)
+
+        return fields
 
     def __validate(self):
         self.__validated = True
@@ -141,8 +150,8 @@ class BaseForm:
             raise Exception('not validated')
         return self.__errors
 
-    def __get_form_fields(self) -> dict:
-        return getattr(self,'declared_fields', {})
+    def __get_form_fields(self) -> list:
+        return getattr(self,'declared_fields', [])
 
     def __get_form_name(self) -> str:
         return getattr(self,'form_name', 'form')
@@ -162,8 +171,7 @@ class BaseForm:
     def as_html(self) -> str:
         tail = ''
         html = ''
-        form_fields = getattr(self, 'all_form_fields', [])
-        for key, val in form_fields:
+        for key, val in self.__base_form_fields:
             if isinstance(val, SubmitButtonField) or isinstance(val, ResetButtonField):
                 tail = tail + val.as_html()
             else:
@@ -175,9 +183,8 @@ class BaseForm:
 
     def as_json(self) -> list:
         response = []
-        form_fields = getattr(self, 'all_form_fields', [])
 
-        for key,val in form_fields:
+        for key,val in self.__base_form_fields:
             response.append(val.as_json())
         return response
 
@@ -187,8 +194,7 @@ class BaseForm:
         html = """<form class='{}' action='{}' method='{}' name='{}' id='id_{}' form_enctype>"""\
             .format(self.__style, self.__url, self.__method, self.__form_name, self.__form_name)
 
-        form_fields = getattr(self, 'all_form_fields',[])
-        for key,val in form_fields:
+        for key,val in self.__base_form_fields:
             if isinstance(val, FileField):
                 has_file = True
         if has_file:
@@ -199,13 +205,26 @@ class BaseForm:
         has_submit = False
         replace = ''
         html = """ form_submit </form>"""
-        form_fields = getattr(self, 'all_form_fields',[])
-        for key,val in form_fields:
+        for key,val in self.__base_form_fields:
             if isinstance(val, SubmitButtonField):
                 has_submit = True
         if not has_submit:
             replace = '<input type="submit" value="Submit">'
         return html.replace('form_submit', replace)
+
+    @staticmethod
+    def __send_html_output(self):
+        return self.as_html(self)
+
+
+    def __getattr__(self, item=None):
+        if item is None:
+            return self.as_html()
+        for key, val in self.__base_form_fields:
+            if key == item:
+                return val.as_html()
+
+
 
 
 class Form(BaseForm, metaclass=DeclaredFieldsMetaClass):
