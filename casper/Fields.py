@@ -9,32 +9,32 @@ from casper.widgets.widgets import Widgets, Validator
 class BaseField:
     _is_valid = False
     __validated = False
-    _style = None
-    _label = None
-    _field_name = None
+    style = None
+    label = None
+    name = None
 
     def as_json(self) -> dict:
         return {
             'field_type': self._get_field_type(self),
-            'field_name': self._field_name,
-            'label' : self._label,
-            'style' : self._style
+            'field_name': self.name,
+            'label' : self.label,
+            'style' : self.style
         }
 
     def as_html(self) -> str:
-        html = """<div class=''>field_help_text field_label field_html <br><br> field_error</div>""".format(self._style)
+        html = """<div class=''>field_help_text field_label field_html <br> field_error</div>""".format(self.style)
         return self.__html_output(html=html)
 
     def as_p(self) -> str:
-        html = """<p class=''>field_help_text field_label field_html field_error</p>""".format(self._style)
+        html = """<p class=''>field_help_text field_label field_html field_error</p>""".format(self.style)
         return self.__html_output(html=html)
 
     def as_table(self) -> str:
-        html = """<div class=''><span>field_help_text field_label field_html field_error</span></div>""".format(self._style)
+        html = """<div class=''><span>field_help_text field_label field_html field_error</span></div>""".format(self.style)
         return self.__html_output(html=html)
 
     def as_u(self) -> str:
-        html = """<li class=''><span>field_help_text field_label field_html field_error</span></li>""".format(self._style)
+        html = """<li class=''><span>field_help_text field_label field_html field_error</span></li>""".format(self.style)
         return self.__html_output(html=html)
 
     def __html_output(self, html) -> str:
@@ -49,31 +49,20 @@ class BaseField:
         raise NotImplementedError
 
     def _set_field_name(self, name:str=None) -> None:
-        self._field_name = name
-        if not self._label:
-            self._label = name
+        self.name = name
+        if not self.label:
+            self.label = name
 
     @staticmethod
     def _get_field_type(field) -> str:
         return ''.join([i for i in (str(type(field)).split('.'))[-1] if i.isalpha()])
 
-    # def __getattr__(self, item):
-    #     print(item)
-    #     if hasattr(self, str(item)):
-    #     #     return self.item
-    #     # if isinstance(item, str):
-    #     #     item = '_' + item
-    #         # if  hasattr(self,item):
-    #         print(item)
-    #             # return self.item
-    #     return None
-
 
 class BaseButtonField(BaseField):
     button_type = None
-    def __init__(self, label:str=None,style:str = None, **kwargs):
-        self._label = label
-        self._style = style
+    def __init__(self, *,label:str=None,style:str = None, **kwargs):
+        self.label = label
+        self.style = style
         super().__init__()
 
     def as_json(self) -> dict:
@@ -83,7 +72,7 @@ class BaseButtonField(BaseField):
 
     def _get_html_fields(self) -> dict:
         return {
-            'html' : """<input class='{}' type='{}' name='{}' id='id_{}' />""".format(self._style, self.button_type, self._field_name, self._field_name),
+            'html' : """<input class='{}' type='{}' name='{}' id='id_{}' />""".format(self.style, self.button_type, self.name, self.name),
             'error': '',
             'help_text':'',
             'label': ''
@@ -100,7 +89,7 @@ class Fields(BaseField):
     _disabled = False
     _regex = None
     _place_holder = None
-    _help_text = None
+    help_text = None
     _custom_error = None
     _error = None
     _clean_data = None
@@ -109,7 +98,7 @@ class Fields(BaseField):
     _auto_complete = False
     _validators = None
 
-    def __init__(self, default=None, required: bool=False, allow_null: bool=True,
+    def __init__(self, data=None, default=None, required: bool=True, allow_null: bool=True,
                  allow_blank: bool=True, read_only: bool=False, label:str=None, regex:str=None,
                  place_holder:str=None, custom_error:str=None, help_text:str=None,
                  widget: Widgets=None,auto_focus:bool=False, auto_complete:bool = False,
@@ -120,19 +109,25 @@ class Fields(BaseField):
         self._allow_null = allow_null
         self._read_only = read_only
         self._disabled = disabled
-        self._label = label
+        self.label = label
         self._regex = regex
         self._place_holder = place_holder
         self._widget = widget
         self._custom_error = custom_error
         self._auto_complete = auto_complete
         self._auto_focus = auto_focus
-        self._help_text = help_text
+        self.help_text = help_text
         self._validators = validators
         self.__validate_created_field()
-        self._style = style
-
+        self.style = style
         super().__init__()
+        if data is not None:
+            self._set_data(data)
+
+
+
+
+
 
     # def __setattr__(self, key, value):
     #     print(value)
@@ -171,7 +166,7 @@ class Fields(BaseField):
         except ValidationFailedException as e:
             error = str(e)
             self._set_error(error)
-            raise ValidationFailedException(self._custom_error)
+            raise ValidationFailedException(error)
 
 
         # user defined validators
@@ -183,7 +178,7 @@ class Fields(BaseField):
             except Exception as e:
                 error = str(e)
                 self._set_error(error)
-                raise ValidationFailedException(self._custom_error)
+                raise ValidationFailedException(error)
 
         self._clean_data = data
         return self._clean_data
@@ -198,7 +193,7 @@ class Fields(BaseField):
             'read_only': self._read_only,
             'regex': self._regex,
             'place_holder': self._place_holder,
-            'help_text':self._help_text,
+            'help_text':self.help_text,
             'custom_error':self._custom_error,
             'auto_focus': self._auto_focus,
             'auto_complete':self._auto_complete,
@@ -206,19 +201,19 @@ class Fields(BaseField):
 
     def _get_base_html_fields(self) -> dict:
         label=None
-        if self._label:
-            label = self._label.title()
+        if self.label:
+            label = self.label.title()
         res = {
             'html': '',
             'error': '',
             'help_text': '',
-            'label': """<span><label class='{}' for='{}'>{}</label></span><br>""".format(self._style, self._field_name,
+            'label': """<span><label class='{}' for='{}'>{}</label></span><br>""".format(self.style, self.name,
                                                                                          label)
         }
         if self._error:
-            res['error'] = """<span class='form_field_error'>{}</span""".format(self._error)
-        if self._help_text:
-            res['error'] = """<span class='form_help_text'>{}</span""".format(self._help_text)
+            res['error'] = """<span class='form_field_error'>{}<br></span""".format(self._error)
+        if self.help_text:
+            res['help_text'] = """<span class='form_help_text'>{}<br></span""".format(self.help_text)
 
         return res
 
@@ -233,8 +228,8 @@ class Fields(BaseField):
         if self._regex:
             defaults += """placeholder='{}' """.format(self._place_holder)
 
-        if self._field_name:
-            defaults += """id='id_{}' """.format(self._field_name)
+        if self.name:
+            defaults += """id='id_{}' """.format(self.name)
 
         field_type = self._get_field_type(self)
 
@@ -250,8 +245,8 @@ class Fields(BaseField):
                 defaults += """required='true' """
 
         if not field_type in ['CheckBoxField', 'RadioField']:
-            if self._field_name:
-                defaults += """name='{}' """.format(self._field_name)
+            if self.name:
+                defaults += """name='{}' """.format(self.name)
 
         if self._auto_focus:
             defaults += """autofocus='true' """

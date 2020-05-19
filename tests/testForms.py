@@ -3,9 +3,9 @@ import time
 from datetime import timedelta
 
 class LoginForm(forms.Form):
-    username = forms.CharField(default='tr', max_length=10, custom_error='not valid')
+    username = forms.CharField(default='tr', max_length=10, custom_error='not valid', required=False, style='greet')
     email = forms.EmailField(default='ert@ge.c', required=False, label='user_email')
-    age = forms.IntegerField(default='5', required=False)
+    age = forms.IntegerField(default='5', required=False, help_text='an age')
     checkbox = forms.CheckBoxField(choices=['gender', 'age'], default='gender', required=False)
     choice = forms.ChoiceField(choices=['gender', 'age'], default='gender', required=False)
     radio = forms.RadioField(choices=['gender', 'age'], default='gender', required=False)
@@ -18,7 +18,7 @@ class LoginForm(forms.Form):
     password = forms.PasswordField(must_contain_lower_case=True, must_contain_number=True, must_contain_symbol=False,default='Passwprd1',required=False, min_length=5)
     phone = forms.PhoneField(default='0456432234', internationalize=False, required=False)
     url = forms.UrlField(default='www.google.com', required=False)
-    textarea = forms.TextField(cols=4)
+    textarea = forms.TextField(cols=4, required=False)
 
     def validate_age(self):
         data = self.initial_data()
@@ -45,9 +45,11 @@ login = LoginForm(initial=initial)
 # print(login.clean_data())
 # print(login.errors())
 # print(login.as_json())
-# print(login.as_html())
-print(login.decimal)
+print(login.as_html())
+# print(login.textarea.validate('7yt66'))
 
+# f = forms.CharField('tr')
+print(forms.CharField('t', min_length=5))
 
 end_time = time.monotonic()
 print(timedelta(seconds=end_time - start_time))
